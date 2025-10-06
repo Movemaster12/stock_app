@@ -13,12 +13,42 @@ if my_symbol and my_symbol.strip():
     try:
         information = fetch_stock_info(my_symbol)
         stock_name(information,my_symbol)
-        # Put a collapsible element here ?
-        st.subheader(f'Market Cap: ${information["marketCap"]:,.0f}' if information.get('marketCap') else 'Market Cap: N/A')
-        st.subheader(f'Sector: {information.get("sector", 'N/A')}')
+        st.subheader(f'{information['regularMarketPrice']} {information['currency']}')
+
+        if information.get("marketCap") or information.get("sector")!= None:
+            st.subheader(f'Market Cap: ${information["marketCap"]:,.0f}')
+            st.subheader(f'Sector: {information.get("sector")}')
+
         price_history = fetch_weekly_price_history(my_symbol)
 
+        st.header('Chart')
+        price_history = price_history.rename_axis('Data').reset_index()
+        candle_stick_chart = go.Figure(data=[go.Candlestick(x=price_history['Data'],
+                                       open=price_history['Open'],
+                                       low=price_history['Low'],
+                                       high=price_history['High'],
+                                       close=price_history['Close'])])
+
+        st.plotly_chart(candle_stick_chart, use_container_width=True)
+
+        if information.get("marketCap") or information.get("sector")!= None:
+            quarterly_financials = fetch_quarterly_finac(my_symbol)
+            annual_financials = fetch_annual_finac(my_symbol)
+
+            st.header('Financials')
+            selection =st.segmented_control(label='Period', options=['Quarterly', 'Annual'], default='Quarterly')
+            if selection == 'Quarterly':
+                quarterly_financials = quarterly_financials.rename_axis('Quarter').reset_index()
+                revenue_chart = alt.Chart(quarterly_financials).mark_bar().encode(
+                x='Quarter', y='Total Revenue')
+                st.altair_chart(revenue_chart, use_container_width=True)
+
+                net_income_chart = alt.Chart(quarterly_financials).mark_bar().encode(
+                x='Quarter', y='Net Income')
+                st.altair_chart(net_income_chart, use_container_width=True)
+
     except Exception as e:
-        st.error(f'Ticker not found!')
+        st.error(f'Ticker not found! Error: {e}')
 else:
-    st.info('Please enter a stock ticker symbol to get started')
+    st.info('Please enter a stocks ticker to get started')
+

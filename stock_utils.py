@@ -2,7 +2,7 @@ import streamlit as st
 import yfinance as yf
 
 # Short desc for given company
-@st.cache_data
+@st.cache_data(ttl=60)
 def fetch_stock_info(symbol):
     stock = yf.Ticker(symbol)
     return stock.info
