@@ -135,7 +135,7 @@ if my_symbol and my_symbol.strip():
                     color=alt.Color('Metric:N', scale=alt.Scale(domain=['Total Revenue', 'Net Income'], range=['red','orange'])),
                     xOffset='Metric:N',
                     tooltip=[
-                        alt.Tooltip('Year:O', title='Quarter'),
+                        alt.Tooltip('Year:O', title='Year'),
                         alt.Tooltip('Metric:N', title='Metric'),
                         alt.Tooltip('Amount:Q', title='Amount', format=',')]
                     ).properties(title='Revenue vs Net Income')
