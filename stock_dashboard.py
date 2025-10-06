@@ -37,18 +37,30 @@ if my_symbol and my_symbol.strip():
 
             st.header('Financials')
             selection =st.segmented_control(label='Period', options=['Quarterly', 'Annual'], default='Quarterly')
+            
             if selection == 'Quarterly':
                 quarterly_financials = quarterly_financials.rename_axis('Quarter').reset_index()
-                revenue_chart = alt.Chart(quarterly_financials).mark_bar().encode(
-                x='Quarter', y='Total Revenue')
+                quarterly_financials['Quarter'] = quarterly_financials['Quarter'].astype(str)
+                revenue_chart = alt.Chart(quarterly_financials).mark_bar(color='red').encode(
+                x='Quarter:O', y='Total Revenue')
                 st.altair_chart(revenue_chart, use_container_width=True)
 
-                net_income_chart = alt.Chart(quarterly_financials).mark_bar().encode(
-                x='Quarter', y='Net Income')
+                net_income_chart = alt.Chart(quarterly_financials).mark_bar(color='orange').encode(
+                x='Quarter:O', y='Net Income')
+                st.altair_chart(net_income_chart, use_container_width=True)
+            elif selection == 'Annual':
+                annual_financials = annual_financials.rename_axis('Year').reset_index()
+                annual_financials['Year'] = annual_financials['Year'].astype(str).transform(lambda year: year.split('-')[0])
+                revenue_chart = alt.Chart(annual_financials).mark_bar(color='red').encode(
+                x='Year:O', y='Total Revenue')
+                st.altair_chart(revenue_chart, use_container_width=True)
+
+                net_income_chart = alt.Chart(annual_financials).mark_bar(color='orange').encode(
+                x='Year:O', y='Net Income')
                 st.altair_chart(net_income_chart, use_container_width=True)
 
     except Exception as e:
-        st.error(f'Ticker not found! Error: {e}')
+        st.error(f' Error occured: {e}')
 else:
     st.info('Please enter a stocks ticker to get started')
 
