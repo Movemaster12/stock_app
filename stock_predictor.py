@@ -6,22 +6,12 @@ import matplotlib.pyplot as plt
 
 st.title('Stocks Predictor')
 
-with st.sidebar:
-    st.header("Model Configuration")
-    start_date = st.date_input("Start Date", value=pd.to_datetime("2020-01-01"))
-    st.subheader("Model Parameters")
-    seq_length = st.slider(
-        "Sequence Length (days)", min_value=10,value=30,max_value=60, help="Number of days to look back")
-    hidden_dim = st.slider("Hidden Dimensions", min_value=16,value=32,max_value=128, help="Size of LSTM hidden state")
-    num_layer=st.slider("LSTM Layers", min_value=1,value=2,max_value=4, help="Number of stacked layers")
-    num_epochs=st.slider("Training Epochs", min_value=50,value=200, max_value=500, step=50)
-    learning_rate = st.select_slider("Learning Rate", options=[0.01, 0.05, 0.075], value=0.01)
-    train_button = st.button(
-        "🚀 Train & Predict", 
-        type="primary", 
-        use_container_width=True
-    )
-
+# with st.sidebar:
+# train_button = st.button(
+    #     "🚀 Train & Predict", 
+    #     type="primary", 
+    #     use_container_width=True
+    # )
 
 my_symbol = st.text_input('Enter a stock ticker', '^GSPC', key='predictor') # S&P 500 is default
 
@@ -30,10 +20,20 @@ if my_symbol and my_symbol.strip():
         information = fetch_stock_info(my_symbol)
         stock_name(information,my_symbol)
 
-        st.divider()        
+        # st.divider()        
+        st.header("Model Configuration")
+        start_date = st.date_input("Start Date", value=pd.to_datetime("2020-01-01"))
+        st.subheader("Model Parameters")
+        seq_length = st.slider(
+            "Sequence Length (days)", min_value=10,value=30,max_value=60, help="Number of days to look back")
+        hidden_dim = st.slider("Hidden Dimensions", min_value=16,value=32,max_value=128, help="Size of LSTM hidden state")
+        num_layer=st.slider("LSTM Layers", min_value=1,value=2,max_value=4, help="Number of stacked layers")
+        num_epochs=st.slider("Training Epochs", min_value=50,value=200, max_value=500, step=50)
+        learning_rate = st.select_slider("Learning Rate", options=[0.01, 0.05, 0.075], value=0.01)
 
-          
-        # train_button = st.button("Train & Preduct", type="primary", use_container_width=True)
+
+        
+        train_button = st.button("Train & Predict", type="primary", use_container_width=True)
         if train_button:
             st.subheader("Loading Data")
             with st.spinner(f"Downloading data for {my_symbol}"):
@@ -48,11 +48,11 @@ if my_symbol and my_symbol.strip():
                 with col1:
                     st.metric("Total Days", len(df))
                 with col2:
-                    st.metric("Latest Price", f"{df['Close'].iloc[-1]:.2f}")
+                    st.metric("Latest Price", f"{df['Close'].iloc[-1].item():.2f}")
                 with col3:
-                    st.metric("Highest", f"{df['Close'].max():.2f}")
+                    st.metric("Highest", f"{df['Close'].max().item():.2f}")
                 with col4:
-                    st.metric("Lowest", f"{df['Close'].min():.2f}")
+                    st.metric("Lowest", f"{df['Close'].min().item():.2f}")
 
                 st.subheader("Preparing Data")
                 with st.spinner("Creating sequences"):
@@ -173,7 +173,8 @@ if my_symbol and my_symbol.strip():
                 }),
                 use_container_width=True)
             
-            st.info("Configure parameters in the sidebar and click **'Train & Predict'**")
+            # Fix sidebar problem
+            # st.info("Configure parameters in the sidebar and click **'Train & Predict'**")
 
     except Exception as e:
         st.error(f'Error: {e}')
