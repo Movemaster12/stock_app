@@ -33,11 +33,12 @@ class PredictionModel(nn.Module):
         out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
         out = self.fc(out[:, -1, :])
         return out
-    
+
 def load_stock_data(ticker, start_date):
     df = yf.download(ticker, start=start_date, progress=False)
     return df
     
+# @st.cache_resource
 def prepare_data(df, seq_length, train_ratio=0.8):
     scaler= StandardScaler()
     close_prices = df[['Close']].values
@@ -59,6 +60,7 @@ def prepare_data(df, seq_length, train_ratio=0.8):
 
     return X_train, y_train, X_test, y_test, scaler
 
+# @st.cache_resource
 def train_model(model, X_train, y_train, num_epochs, learning_rate, callback=None):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
@@ -77,6 +79,7 @@ def train_model(model, X_train, y_train, num_epochs, learning_rate, callback=Non
 
     return losses
 
+# @st.cache_resource
 def evaluate_model(model, X_train, y_train, X_test, y_test, scaler):
     model.eval()
 
@@ -100,6 +103,8 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, scaler):
         'train_rmse': train_rmse,
         'test_rmse': test_rmse}
 
+
+# @st.cache_resource
 def predict_next_day(model, recent_data, scaler, seq_length):
     model.eval()
     
