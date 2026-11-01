@@ -40,43 +40,72 @@ def load_stock_data(ticker, start_date):
     
 # @st.cache_resource
 def prepare_data(df, seq_length, train_ratio=0.8):
-    scaler= StandardScaler()
-    close_prices = df[['Close']].values
-    scaled_data = scaler.fit_transform(close_prices)
+    returns = df[['Close']].pct_change().dropna().values
+
+    train_size = int(train_ratio * len(returns))
+    scaler = StandardScaler()
+    scaler.fit(returns[:train_size])
+    scaled_data = scaler.transform(returns)
 
     data = []
     for i in range(len(scaled_data) - seq_length):
         data.append(scaled_data[i:i+seq_length])
 
     data = np.array(data)
-    train_size = int(train_ratio * len(data))
+    seq_train_size = int(train_ratio * len(data))
 
-    # Train sets, x-input, y-output
-    X_train = torch.from_numpy(data[:train_size, :-1, :]).type(torch.Tensor).to(device)
-    y_train = torch.from_numpy(data[:train_size, -1, :]).type(torch.Tensor).to(device)
-    # Test sets, x-input, y-outputs
-    X_test = torch.from_numpy(data[train_size:, :-1, :]).type(torch.Tensor).to(device)
-    y_test = torch.from_numpy(data[train_size:, -1, :]).type(torch.Tensor).to(device)
+    X_train = torch.from_numpy(data[:seq_train_size, :-1, :]).type(torch.Tensor).to(device)
+    y_train = torch.from_numpy(data[:seq_train_size, -1, :]).type(torch.Tensor).to(device)
+    X_test = torch.from_numpy(data[seq_train_size:, :-1, :]).type(torch.Tensor).to(device)
+    y_test = torch.from_numpy(data[seq_train_size:, -1, :]).type(torch.Tensor).to(device)
 
     return X_train, y_train, X_test, y_test, scaler
+    # # scaler= StandardScaler()
+    # close_prices = df[['Close']].values
+    # # scaled_data = scaler.fit_transform(close_prices)
+
+    # returns = df['Close'].pct_change().dropna().values.reshape(-1, 1)
+
+    # train_size = int(train_ratio * len(close_prices))
+    # scaler = StandardScaler()
+    # scaler.fit(close_prices[:train_size])
+    # scaled_data = scaler.transform(close_prices)
+
+    # data = []
+    # for i in range(len(scaled_data) - seq_length):
+    #     data.append(scaled_data[i:i+seq_length])
+
+    # data = np.array(data)
+    # seq_train_size = int(train_ratio * len(data))
+
+    # # Train sets, x-input, y-output
+    # X_train = torch.from_numpy(data[:seq_train_size, :-1, :]).type(torch.Tensor).to(device)
+    # y_train = torch.from_numpy(data[:seq_train_size, -1, :]).type(torch.Tensor).to(device)
+    # # Test sets, x-input, y-outputs
+    # X_test = torch.from_numpy(data[seq_train_size:, :-1, :]).type(torch.Tensor).to(device)
+    # y_test = torch.from_numpy(data[seq_train_size:, -1, :]).type(torch.Tensor).to(device)
+
+    # return X_train, y_train, X_test, y_test, scaler
 
 # @st.cache_resource
 def train_model(model, X_train, y_train, num_epochs, learning_rate, callback=None):
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     losses = []
     model.train()
 
     for i in range(num_epochs):
         y_train_pred = model(X_train)
-
         loss = criterion(y_train_pred, y_train)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
+        losses.append(loss.item())
+        if callback is not None:
+            callback(i, loss.item())
     return losses
 
 # @st.cache_resource
@@ -95,6 +124,8 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, scaler):
     # Calculate RMSE
     train_rmse = root_mean_squared_error(y_train_inv[:, 0], y_train_pred_inv[:, 0])
     test_rmse = root_mean_squared_error(y_test_inv[:, 0], y_test_pred_inv[:, 0])
+
+    
     
     return {'train_predictions': y_train_pred_inv,
         'train_actual': y_train_inv,

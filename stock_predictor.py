@@ -6,13 +6,6 @@ import matplotlib.pyplot as plt
 
 st.title('Stocks Predictor')
 
-# with st.sidebar:
-# train_button = st.button(
-    #     "🚀 Train & Predict", 
-    #     type="primary", 
-    #     use_container_width=True
-    # )
-
 my_symbol = st.text_input('Enter a stock ticker', '^GSPC', key='predictor') # S&P 500 is default
 
 if my_symbol and my_symbol.strip():
@@ -31,8 +24,6 @@ if my_symbol and my_symbol.strip():
         num_epochs=st.slider("Training Epochs", min_value=50,value=200, max_value=500, step=50)
         learning_rate = st.select_slider("Learning Rate", options=[0.01, 0.05, 0.075], value=0.01)
 
-
-        
         train_button = st.button("Train & Predict", type="primary", use_container_width=True)
         if train_button:
             st.subheader("Loading Data")
@@ -121,55 +112,45 @@ if my_symbol and my_symbol.strip():
             
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Training RMSE", f"${results['train_rmse']:.2f}")
+                st.metric("Training RMSE (returns)", f"{results['train_rmse']:.6f}")
             with col2:
-                st.metric("Test RMSE", f"${results['test_rmse']:.2f}")
+                st.metric("Test RMSE (returns)", f"{results['test_rmse']:.6f}")
 
-            st.subheader("Prediction vs Actual")
-            fig_pred, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-            
-            # Training predictions
-            ax1.plot(results['train_actual'][:, 0], 
-                    label='Actual', color='#2ca02c', linewidth=2)
-            ax1.plot(results['train_predictions'][:, 0], 
-                    label='Predicted', color='#ff7f0e', 
-                    linewidth=2, alpha=0.7, linestyle='--')
-            ax1.set_title('Training Set', fontsize=14, fontweight='bold')
-            ax1.set_xlabel('Time Steps')
-            ax1.set_ylabel('Price ($)')
-            ax1.legend()
-            ax1.grid(True, alpha=0.3)
-            
-            # Test predictions
-            ax2.plot(results['test_actual'][:, 0], 
-                    label='Actual', color='#2ca02c', linewidth=2)
-            ax2.plot(results['test_predictions'][:, 0], 
-                    label='Predicted', color='#ff7f0e', 
-                    linewidth=2, alpha=0.7, linestyle='--')
-            ax2.set_title('Test Set', fontsize=14, fontweight='bold')
-            ax2.set_xlabel('Time Steps')
-            ax2.set_ylabel('Price ($)')
-            ax2.legend()
-            ax2.grid(True, alpha=0.3)
-            
-            plt.tight_layout()
-            st.pyplot(fig_pred)
+            st.subheader("Prediction vs Actual (Returns)")
+            # fig_pred, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+
+            # ax1.plot(results['train_actual'][:, 0], label='Actual', color='#2ca02c', linewidth=2)
+            # ax1.plot(results['train_predictions'][:, 0], label='Predicted', color='#ff7f0e', linewidth=2, alpha=0.7, linestyle='--')
+            # ax1.set_title('Training Set', fontsize=14, fontweight='bold')
+            # ax1.set_xlabel('Time Steps')
+            # ax1.set_ylabel('Daily Return')
+            # ax1.legend()
+            # ax1.grid(True, alpha=0.3)
+
+            # ax2.plot(results['test_actual'][:, 0], label='Actual', color='#2ca02c', linewidth=2)
+            # ax2.plot(results['test_predictions'][:, 0], label='Predicted', color='#ff7f0e', linewidth=2, alpha=0.7, linestyle='--')
+            # ax2.set_title('Test Set', fontsize=14, fontweight='bold')
+            # ax2.set_xlabel('Time Steps')
+            # ax2.set_ylabel('Daily Return')
+            # ax2.legend()
+            # ax2.grid(True, alpha=0.3)
+
+            # plt.tight_layout()
+            # st.pyplot(fig_pred)
 
             st.subheader("Recent Predictions")
             n_show = min(10, len(results['test_actual']))
             pred_df = pd.DataFrame({
-                'Actual Price': results['test_actual'][-n_show:, 0],
-                'Predicted Price': results['test_predictions'][-n_show:, 0],
+                'Actual Return': results['test_actual'][-n_show:, 0],
+                'Predicted Return': results['test_predictions'][-n_show:, 0],
             })
-            pred_df['Difference'] = pred_df['Actual Price'] - pred_df['Predicted Price']
-            pred_df['Difference %'] = (pred_df['Difference'] / pred_df['Actual Price'] * 100)
-            
+            pred_df['Difference'] = pred_df['Actual Return'] - pred_df['Predicted Return']
+
             st.dataframe(
                 pred_df.style.format({
-                    'Actual Price': '${:.2f}',
-                    'Predicted Price': '${:.2f}',
-                    'Difference': '${:.2f}',
-                    'Difference %': '{:.2f}%'
+                    'Actual Return': '{:.4%}',
+                    'Predicted Return': '{:.4%}',
+                    'Difference': '{:.4%}'
                 }),
                 use_container_width=True)
             
